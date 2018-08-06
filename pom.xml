@@ -25,7 +25,7 @@
   <groupId>com.github.lburgazzoli</groupId>
   <artifactId>graalvm-native-scripting</artifactId>
   <version>1.0.0</version>
-  <name>graalvm-name-scripting</name>
+  <name>graalvm-native-scripting</name>
   <packaging>jar</packaging>
 
   <properties>
