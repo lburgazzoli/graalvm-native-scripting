@@ -88,8 +88,6 @@
               <arguments>
                 <argument>-cp</argument>
                 <classpath/>
-                <argument>--tool:regex</argument>
-                <argument>--tool:truffle</argument>
                 <argument>--language:js</argument>
                 <argument>-H:+JNI</argument>
                 <argument>com.github.lburgazzoli.graal.Main</argument>
