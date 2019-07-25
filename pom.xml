@@ -32,14 +32,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jdk.version>1.8</jdk.version>
-    <graalvm.version>1.0.0-rc5</graalvm.version>
+    <graalvm.version>19.1.1</graalvm.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>org.graalvm</groupId>
+      <groupId>org.graalvm.sdk</groupId>
       <artifactId>graal-sdk</artifactId>
-      <version>1.0.0-rc5</version>
+      <version>${graalvm.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -47,7 +47,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-toolchains-plugin</artifactId>
         <version>1.1</version>
         <executions>
@@ -59,7 +58,10 @@
         </executions>
         <configuration>
           <toolchains>
-            <jdk/>
+            <jdk>
+              <id>graalvm</id>
+              <version>19</version>
+            </jdk>
           </toolchains>
         </configuration>
       </plugin>
@@ -68,35 +70,44 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${jdk.version}</source>
+          <target>${jdk.version}</target>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <phase>process-classes</phase>
-            <configuration>
-              <executable>native-image</executable>
-              <workingDirectory>${project.build.directory}</workingDirectory>
-              <arguments>
-                <argument>-cp</argument>
-                <classpath/>
-                <argument>--language:js</argument>
-                <argument>-H:+JNI</argument>
-                <argument>com.github.lburgazzoli.graal.Main</argument>
-              </arguments>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>native</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.oracle.substratevm</groupId>
+            <artifactId>native-image-maven-plugin</artifactId>
+            <version>${graalvm.version}</version>
+            <configuration>
+              <mainClass>com.github.lburgazzoli.graal.Main</mainClass>
+              <imageName>${project.artifactId}</imageName>
+              <buildArgs>
+                --language:js --no-server -H:Features=com.github.lburgazzoli.graal.Feature
+              </buildArgs>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>native-image</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 
 </project>

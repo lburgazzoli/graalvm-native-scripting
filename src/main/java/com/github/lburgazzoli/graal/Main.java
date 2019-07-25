@@ -1,14 +1,10 @@
 package com.github.lburgazzoli.graal;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.function.Function;
 
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Source;
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyExecutable;
-import org.graalvm.polyglot.proxy.ProxyObject;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -16,28 +12,20 @@ public class Main {
             throw new IllegalArgumentException("Usage:  com.github.lburgazzoli.graal.main file");
         }
 
-        try(Context ctx = Context.create()) {
-            final ProxyExecutable sayHello =  new ProxyExecutable() {
-                @Override
-                public Object execute(Value... arguments) {
-                    if (arguments.length != 1) {
-                        throw new IllegalArgumentException();
-                    }
+        try(Context ctx = Context.newBuilder("js").allowAllAccess(true).build()) {
+            ctx.getBindings("js").putMember("__dsl", new DSL());
+            byte[] content = Files.readAllBytes(Paths.get(args[0]));
+            ctx.eval("js", "with (__dsl) { " + new String(content) + "}");
+        }
+    }
 
-                    System.out.printf("Hello, %s\n", arguments[0].asString());
-                    return null;
-                }
-            };
+    public static class DSL {
+        public void sayHello(String target) {
+            System.out.println("Hello " + target);
+        }
 
-            final Map<String, Object> proxy = new HashMap<>();
-            proxy.put("sayHello", sayHello);
-
-            ctx.getBindings("js").putMember("bean", ProxyObject.fromMap(proxy));
-            ctx.getBindings("js").putMember("sayHello", sayHello);
-
-            ctx.eval(
-                Source.newBuilder("js", new File(args[0])).build()
-            );
+        public void exec(Function<String, String> function) {
+            System.out.println(function.apply("dsl"));
         }
     }
 }
